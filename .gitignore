@@ -20,3 +20,6 @@ Thumbs.db
 # Données utilisateur
 data/cvs/
 data/outputs/
+
+# Streamlit
+.streamlit/secrets.toml

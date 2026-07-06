@@ -79,9 +79,18 @@ Ton rôle est d'extraire les informations d'un CV de manière structurée.
 RÈGLES IMPÉRATIVES :
 1. Tu réponds UNIQUEMENT en JSON valide, sans aucun texte avant ou après.
 2. Tu respectes EXACTEMENT le schéma fourni.
-3. Si une information est absente du CV, mets `null` (pour un champ) ou `[]` (pour une liste).
+3. Si une information est absente du CV, mets `null` (champ) ou `[]` (liste).
 4. Tu n'inventes JAMAIS d'informations qui ne sont pas dans le CV.
-5. Tu préserves la langue originale du CV (français reste français, etc.).
+5. Tu préserves la langue originale du CV.
+
+ATTENTION — pièges courants à éviter :
+- Les titres de sections (PROFIL, EXPÉRIENCES, FORMATION, COMPÉTENCES, PROJETS,
+  CERTIFICATIONS, LANGUES, ATOUTS, TECHNOLOGIES, etc.) ne sont JAMAIS des noms
+  d'entreprise ou de poste. Ignore-les complètement.
+- Le nom de l'entreprise vient JUSTE après le titre du poste dans une expérience.
+- Si tu vois des mots collés sans espace (ex: 'DiplôméedunMaster'), reconstitue
+  le sens et reformule proprement.
+- Si une date est collée (ex: '2025-Mars2026'), reformate proprement.
 """
 
 
@@ -128,52 +137,50 @@ def extract_json_from_text(text: str) -> str:
 # 4. CORE FUNCTION
 # ─────────────────────────────────────────────────────────────
 
-def parse_cv(cv_text: str, max_retries: int = 2) -> CVData:
+def parse_cv(cv_text: str, max_retries: int = 2, debug: bool = False) -> CVData:
     """
     Parse a raw CV text into a structured CVData object.
     
     Args:
         cv_text: The raw text of the CV.
-        max_retries: How many times to retry if LLM output is malformed.
-    
-    Returns:
-        A validated CVData object.
-    
-    Raises:
-        ValueError: If the LLM consistently fails to return valid data.
+        max_retries: Retries on malformed output.
+        debug: If True, prints the raw LLM response when parsing fails.
     """
     user_prompt = build_user_prompt(cv_text)
     last_error = None
+    last_raw_response = None
     
     for attempt in range(max_retries + 1):
         try:
-            # Low temperature → deterministic extraction
             raw_response = chat(
                 prompt=user_prompt,
                 system_prompt=SYSTEM_PROMPT,
                 temperature=0.1,
                 max_tokens=2000,
             )
+            last_raw_response = raw_response
             
-            # Clean the output
             json_str = extract_json_from_text(raw_response)
-            
-            # Parse JSON
             data = json.loads(json_str)
-            
-            # Validate with Pydantic — this is where the magic happens
             cv_data = CVData.model_validate(data)
-            
             return cv_data
         
         except (json.JSONDecodeError, ValueError, ValidationError) as e:
             last_error = e
             print(f"⚠️  Attempt {attempt + 1} failed: {type(e).__name__}")
+            
+            if debug and last_raw_response:
+                print(f"   🔍 Raw LLM response (first 500 chars):")
+                print(f"   ---")
+                print(f"   {last_raw_response[:500]}")
+                print(f"   ---")
+            
             if attempt < max_retries:
                 print(f"   Retrying...")
                 continue
     
-    raise ValueError(
-        f"Failed to parse CV after {max_retries + 1} attempts. "
-        f"Last error: {last_error}"
-    )
+    # Final error message includes raw response for diagnostic
+    error_msg = f"Failed after {max_retries + 1} attempts. Last error: {last_error}"
+    if last_raw_response:
+        error_msg += f"\nLast LLM response (first 300 chars): {last_raw_response[:300]}"
+    raise ValueError(error_msg)
