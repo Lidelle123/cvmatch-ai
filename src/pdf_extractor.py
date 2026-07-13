@@ -145,13 +145,13 @@ def clean_text(text: str) -> str:
     Clean extracted PDF text to make it LLM-ready.
     Now handles (cid:XXX) artifacts from unmapped glyphs.
     """
-    # 🆕 Remove (cid:XXX) artifacts (unmapped glyphs, common with LaTeX PDFs)
+    # Remove (cid:XXX) artifacts (unmapped glyphs, common with LaTeX PDFs)
     text = re.sub(r"\(cid:\d+\)", "", text)
     
-    # 🆕 Split concatenated words BEFORE other cleaning
+    # Split concatenated words BEFORE other cleaning
     text = _split_concatenated_words(text)
     
-    # 🆕 Remove orphan ligature fragments left after cid removal
+    # Remove orphan ligature fragments left after cid removal
     # Patterns like " fl " (when ligature was on an icon) become noise
     # Only remove if surrounded by spaces (preserve real words)
     text = re.sub(r"\s+(fl|fi|ffi|ffl)\s+", " ", text)
@@ -207,11 +207,11 @@ def assess_extraction_quality(text: str) -> dict:
         if alpha_ratio < 0.85:
             warnings.append(f"Low alphanumeric ratio ({alpha_ratio:.0%}). Garbled output?")
     
-    # 🆕 Check for (cid:XXX) leftovers (should be cleaned but just in case)
+    # Check for (cid:XXX) leftovers (should be cleaned but just in case)
     if "(cid:" in text:
         warnings.append("Unmapped glyphs detected (cid:XXX). Some chars couldn't be decoded.")
     
-    # 🆕 Check for word concatenation (common LaTeX issue)
+    # Check for word concatenation (common LaTeX issue)
     # Heuristic: count words longer than 25 chars (suspiciously long)
     very_long_words = [w for w in text.split() if len(w) > 25]
     if len(very_long_words) > 3:
@@ -245,10 +245,10 @@ def extract_cv_text(pdf_path: str | Path, verbose: bool = False) -> str:
         print(f"   Words      : {quality['word_count']}")
         print(f"   Lines      : {quality['line_count']}")
         if quality["warnings"]:
-            print(f"   ⚠️  Warnings:")
+            print(f"   Warnings:")
             for w in quality["warnings"]:
                 print(f"      - {w}")
         else:
-            print(f"   ✅ Quality looks good")
+            print(f"  Quality looks good")
     
     return cleaned

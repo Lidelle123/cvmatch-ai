@@ -167,10 +167,10 @@ def parse_cv(cv_text: str, max_retries: int = 2, debug: bool = False) -> CVData:
         
         except (json.JSONDecodeError, ValueError, ValidationError) as e:
             last_error = e
-            print(f"⚠️  Attempt {attempt + 1} failed: {type(e).__name__}")
+            print(f" Attempt {attempt + 1} failed: {type(e).__name__}")
             
             if debug and last_raw_response:
-                print(f"   🔍 Raw LLM response (first 500 chars):")
+                print(f"   Raw LLM response (first 500 chars):")
                 print(f"   ---")
                 print(f"   {last_raw_response[:500]}")
                 print(f"   ---")

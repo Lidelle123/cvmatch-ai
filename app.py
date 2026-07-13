@@ -38,11 +38,11 @@ from src.optimizer import (
 
 st.set_page_config(
     page_title="CVMatch AI",
-    page_icon="🎯",
+    page_icon="",
     layout="wide",
 )
 
-st.title("🎯 CVMatch AI")
+st.title(" CVMatch AI")
 st.caption(
     "Optimisez votre candidature avec l'IA — analyse, score, CV optimisé, "
     "lettre de motivation et préparation entretien."
@@ -54,21 +54,21 @@ st.caption(
 # ─────────────────────────────────────────────────────────────
 
 with st.sidebar:
-    st.header("📥 Vos données")
+    st.header(" Vos données")
 
     uploaded_cv = st.file_uploader(
-        "1️⃣ Uploade ton CV (PDF)",
+        " Uploade ton CV (PDF)",
         type=["pdf"],
         help="CV au format PDF text-based (pas un scan)",
     )
 
     job_text = st.text_area(
-        "2️⃣ Colle l'offre d'emploi",
+        " Colle l'offre d'emploi",
         height=300,
         placeholder="Colle ici le texte complet de l'offre...",
     )
 
-    analyze_button = st.button("🚀 Analyser", type="primary", use_container_width=True)
+    analyze_button = st.button(" Analyser", type="primary", use_container_width=True)
     
     st.divider()
     st.caption("Powered by Groq · openai/gpt-oss-120b")
@@ -81,7 +81,7 @@ with st.sidebar:
 
 if not analyze_button and "match" not in st.session_state:
     st.info(
-        "👈 Uploade ton CV et colle une offre d'emploi dans la barre latérale, "
+        " Uploade ton CV et colle une offre d'emploi dans la barre latérale, "
         "puis clique sur **Analyser**."
     )
     st.stop()
@@ -92,18 +92,18 @@ if analyze_button:
         st.session_state.pop(key, None)
 
     if not uploaded_cv:
-        st.error("❌ Aucun CV uploadé.")
+        st.error(" Aucun CV uploadé.")
         st.stop()
 
     if not job_text or len(job_text.strip()) < 100:
-        st.error("❌ Le texte de l'offre est trop court (minimum 100 caractères).")
+        st.error(" Le texte de l'offre est trop court (minimum 100 caractères).")
         st.stop()
 
     # ── PIPELINE STAGES ────────────────────────────────────────
 
     try:
         # Stage 1: extract CV text
-        with st.spinner("📄 Extraction du CV..."):
+        with st.spinner(" Extraction du CV..."):
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
                 tmp.write(uploaded_cv.getvalue())
                 tmp_path = tmp.name
@@ -113,28 +113,28 @@ if analyze_button:
                 Path(tmp_path).unlink(missing_ok=True)
 
         # Stage 2: parse CV
-        with st.spinner("🧠 Analyse structurelle du CV..."):
+        with st.spinner(" Analyse structurelle du CV..."):
             st.session_state.cv_data = parse_cv(cv_text)
 
         # Stage 3: parse job offer
-        with st.spinner("🧠 Analyse de l'offre d'emploi..."):
+        with st.spinner(" Analyse de l'offre d'emploi..."):
             st.session_state.job_offer = parse_job_offer(job_text)
 
         # Stage 4: matching
-        with st.spinner("⚖️  Calcul de la compatibilité..."):
+        with st.spinner("  Calcul de la compatibilité..."):
             st.session_state.match = match_cv_to_job(
                 st.session_state.cv_data,
                 st.session_state.job_offer,
             )
 
     except (PDFExtractionError, FileNotFoundError) as e:
-        st.error(f"❌ Erreur d'extraction PDF : {e}")
+        st.error(f" Erreur d'extraction PDF : {e}")
         st.stop()
     except ValueError as e:
-        st.error(f"❌ Erreur de traitement : {e}")
+        st.error(f" Erreur de traitement : {e}")
         st.stop()
     except Exception as e:
-        st.error(f"❌ Erreur inattendue : {type(e).__name__} — {e}")
+        st.error(f" Erreur inattendue : {type(e).__name__} — {e}")
         st.stop()
 
 
